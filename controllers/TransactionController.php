@@ -19,9 +19,6 @@ use yii\rest\OptionsAction;
  */
 class TransactionController extends RestController
 {
-	/** @var string */
-	public $modelClass = 'app\models\Transaction';
-
     /**
      * {@inheritdoc}
      */
@@ -30,32 +27,32 @@ class TransactionController extends RestController
         return [
             'index' => [
                 'class' => IndexAction::class,
-                'modelClass' => $this->modelClass,
+                'modelClass' => Transaction::class,
                 'checkAccess' => [$this, 'checkAccess'],
                 'prepareDataProvider' => [$this, 'prepareDataProvider'],
                 'dataFilter' => [
                     'class' => ActiveDataFilter::class,
-                    'searchModel' => $this->modelClass,
+                    'searchModel' => Transaction::class,
                 ]
             ],
             'view' => [
                 'class' => ViewAction::class,
-                'modelClass' => $this->modelClass,
+                'modelClass' => Transaction::class,
                 'checkAccess' => [$this, 'checkAccess'],
             ],
             'create' => [
                 'class' => CreateAction::class,
-                'modelClass' => $this->modelClass,
+                'modelClass' => Transaction::class,
                 'checkAccess' => [$this, 'checkAccess'],
             ],
             'update' => [
                 'class' => UpdateAction::class,
-                'modelClass' => $this->modelClass,
+                'modelClass' => Transaction::class,
                 'checkAccess' => [$this, 'checkAccess'],
             ],
             'delete' => [
                 'class' => DeleteAction::class,
-                'modelClass' => $this->modelClass,
+                'modelClass' => Transaction::class,
                 'checkAccess' => [$this, 'checkAccess'],
             ],
             'options' => [
@@ -87,10 +84,9 @@ class TransactionController extends RestController
 	 */
 	public function prepareDataProvider($action, $filter) 
 	{
-        $modelClass = $this->modelClass;
-		$query = $modelClass::find();
+		$query = Transaction::find()->joinWith('category');
 
-		$query->where(['user_id' => Yii::$app->user->id]);
+		$query->where([Transaction::tableName() . '.user_id' => Yii::$app->user->id]);
 
         if (!empty($filter)) {
             $query->andWhere($filter);
@@ -98,7 +94,15 @@ class TransactionController extends RestController
 
         return new ActiveDataProvider([
         	'query' => $query,
-            'sort' => ['defaultOrder' => ['transaction_date' => SORT_DESC]]
+            'sort' => [
+                'attributes' => [
+                    'amount' => ['asc' => ['amount' => SORT_ASC, 'id' => SORT_ASC], 'desc' => ['amount' => SORT_DESC, 'id' => SORT_DESC]],
+                    'category_id' => ['asc' => ['name' => SORT_ASC], 'desc' => ['name' => SORT_DESC]],
+                    'description' => ['asc' => ['description' => SORT_ASC], 'desc' => ['description' => SORT_DESC]],
+                    'transaction_date' => ['asc' => ['transaction_date' => SORT_ASC], 'desc' => ['transaction_date' => SORT_DESC]],
+                ],
+                'defaultOrder' => ['transaction_date' => SORT_DESC],
+            ]
 		]);
 	}
 }
